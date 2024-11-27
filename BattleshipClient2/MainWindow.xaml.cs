@@ -41,7 +41,7 @@ namespace BattleshipClient
 
         private void CreateBoards()
         {
-       
+
             for (int i = 0; i < BOARD_SIZE; i++)
             {
                 for (int j = 0; j < BOARD_SIZE; j++)
@@ -64,7 +64,7 @@ namespace BattleshipClient
                 }
             }
 
-    
+
             for (int i = 0; i < BOARD_SIZE; i++)
             {
                 for (int j = 0; j < BOARD_SIZE; j++)
@@ -114,11 +114,14 @@ namespace BattleshipClient
                 rect.MouseDown += Ship_MouseDown;
                 rect.MouseMove += Ship_MouseMove;
                 rect.MouseUp += Ship_MouseUp;
+                rect.MouseRightButtonDown += Ship_MouseRightButtonDown;  
+
+
 
                 ship.Rectangle = rect;
                 ShipsPanel.Children.Add(rect);
 
-              
+
                 if (ShipsPanel.Children.Count > 1)
                 {
                     var lastShip = ShipsPanel.Children[ShipsPanel.Children.Count - 2] as Rectangle;
@@ -153,39 +156,42 @@ namespace BattleshipClient
             var rectangle = sender as Rectangle;
             Point currentPos = e.GetPosition(PlayerBoard);
 
-          
+
             double left = currentPos.X - dragStart.X;
             double top = currentPos.Y - dragStart.Y;
 
-          
+
             left = Math.Max(0, Math.Min(left, PlayerBoard.ActualWidth - rectangle.Width));
             top = Math.Max(0, Math.Min(top, PlayerBoard.ActualHeight - rectangle.Height));
 
-   
+
             Canvas.SetLeft(rectangle, left);
             Canvas.SetTop(rectangle, top);
 
-       
+
             ShowPlacementPreview(left, top);
         }
 
         private void ShowPlacementPreview(double left, double top)
         {
-      
             int x = (int)(left / CELL_SIZE);
             int y = (int)(top / CELL_SIZE);
 
-          
             ResetBoardColors();
 
-       
             if (CanPlaceShip(selectedShip, x, y))
             {
                 for (int i = 0; i < selectedShip.Length; i++)
                 {
-                    if (x + i < BOARD_SIZE)
+                    if (selectedShip.IsHorizontal)
                     {
-                        playerBoard[y, x + i].Background = new SolidColorBrush(Color.FromRgb(46, 213, 115));
+                        if (x + i < BOARD_SIZE)
+                            playerBoard[y, x + i].Background = new SolidColorBrush(Color.FromRgb(46, 213, 115));
+                    }
+                    else
+                    {
+                        if (y + i < BOARD_SIZE)
+                            playerBoard[y + i, x].Background = new SolidColorBrush(Color.FromRgb(46, 213, 115));
                     }
                 }
             }
@@ -193,9 +199,15 @@ namespace BattleshipClient
             {
                 for (int i = 0; i < selectedShip.Length; i++)
                 {
-                    if (x + i < BOARD_SIZE)
+                    if (selectedShip.IsHorizontal)
                     {
-                        playerBoard[y, x + i].Background = new SolidColorBrush(Color.FromRgb(255, 71, 87));
+                        if (x + i < BOARD_SIZE)
+                            playerBoard[y, x + i].Background = new SolidColorBrush(Color.FromRgb(255, 71, 87));
+                    }
+                    else
+                    {
+                        if (y + i < BOARD_SIZE)
+                            playerBoard[y + i, x].Background = new SolidColorBrush(Color.FromRgb(255, 71, 87));
                     }
                 }
             }
@@ -236,7 +248,7 @@ namespace BattleshipClient
             {
                 PlaceShip(selectedShip, x, y);
 
-           
+
                 Canvas.SetLeft(rectangle, x * CELL_SIZE);
                 Canvas.SetTop(rectangle, y * CELL_SIZE);
                 Panel.SetZIndex(rectangle, 0);
@@ -312,18 +324,32 @@ namespace BattleshipClient
 
         private bool CanPlaceShip(Ship ship, int x, int y)
         {
-            if (x < 0 || x + ship.Length > BOARD_SIZE || y < 0 || y >= BOARD_SIZE)
-                return false;
-
-
-            for (int i = 0; i < ship.Length; i++)
+            if (ship.IsHorizontal)
             {
-                if (IsOccupied(y, x + i))
+                if (x < 0 || x + ship.Length > BOARD_SIZE || y < 0 || y >= BOARD_SIZE)
                     return false;
+
+                for (int i = 0; i < ship.Length; i++)
+                {
+                    if (IsOccupied(y, x + i))
+                        return false;
+                }
+            }
+            else
+            {
+                if (x < 0 || x >= BOARD_SIZE || y < 0 || y + ship.Length > BOARD_SIZE)
+                    return false;
+
+                for (int i = 0; i < ship.Length; i++)
+                {
+                    if (IsOccupied(y + i, x))
+                        return false;
+                }
             }
 
             return true;
         }
+
 
         private void PlaceShip(Ship ship, int x, int y)
         {
@@ -332,9 +358,17 @@ namespace BattleshipClient
 
             for (int i = 0; i < ship.Length; i++)
             {
-                playerBoard[y, x + i].Background = new SolidColorBrush(Color.FromRgb(85, 239, 196));
+                if (ship.IsHorizontal)
+                {
+                    playerBoard[y, x + i].Background = new SolidColorBrush(Color.FromRgb(85, 239, 196));
+                }
+                else
+                {
+                    playerBoard[y + i, x].Background = new SolidColorBrush(Color.FromRgb(85, 239, 196));
+                }
             }
         }
+
 
         private void ConnectToServer()
         {
@@ -419,6 +453,30 @@ namespace BattleshipClient
                 GameStatus.Text = "Miss! Waiting for opponent...";
             }
         }
+        private void Ship_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (gameStarted) return;
+
+            var rectangle = sender as Rectangle;
+            var ship = rectangle.DataContext as Ship;
+
+            if (ship != null && !ship.IsPlaced)
+            {
+                ship.IsHorizontal = !ship.IsHorizontal;
+
+                
+                if (ship.IsHorizontal)
+                {
+                    rectangle.Width = ship.Length * CELL_SIZE;
+                    rectangle.Height = CELL_SIZE;
+                }
+                else
+                {
+                    rectangle.Width = CELL_SIZE;
+                    rectangle.Height = ship.Length * CELL_SIZE;
+                }
+            }
+        }
 
         private void EnemyBoard_Click(object sender, RoutedEventArgs e)
         {
@@ -470,15 +528,15 @@ namespace BattleshipClient
     {
         public string Name { get; set; }
         public int Length { get; set; }
-        public Rectangle Rectangle { get; set; }
         public bool IsPlaced { get; set; }
         public Point Position { get; set; }
+        public Rectangle Rectangle { get; set; }
+        public bool IsHorizontal { get; set; } = true; 
 
         public Ship(string name, int length)
         {
             Name = name;
             Length = length;
-            IsPlaced = false;
         }
     }
 }
