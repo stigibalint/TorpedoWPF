@@ -116,10 +116,28 @@ namespace BattleshipServer
             try
             {
                 string[] parts = message.Substring(5).Split(',');
-                int row = int.Parse(parts[0]);
-                int col = int.Parse(parts[1]);
 
-            
+               
+                if (parts.Length < 2)
+                {
+                    SendErrorMessage(shooter, "INVALID_SHOT_FORMAT");
+                    return;
+                }
+
+              
+                if (!int.TryParse(parts[0], out int row) ||
+                    !int.TryParse(parts[1], out int col))
+                {
+                    SendErrorMessage(shooter, "INVALID_COORDINATES");
+                    return;
+                }
+
+                if (row < 0 || row >= 10 || col < 0 || col >= 10)
+                {
+                    SendErrorMessage(shooter, "OUT_OF_BOARD");
+                    return;
+                }
+
                 string shooterName = (shooter == player1) ? "Player1" : "Player2";
                 string targetPlayerName = (shooter == player1) ? "Player2" : "Player1";
                 string shotPosition = $"{row},{col}";
@@ -127,36 +145,51 @@ namespace BattleshipServer
                 Console.WriteLine($"Shot received from {shooterName} at position {shotPosition}");
                 Console.WriteLine($"Current turn: {(player1Turn ? "Player1" : "Player2")}");
 
-               
-                if ((shooterName == "Player1" && player1Turn) ||
-                    (shooterName == "Player2" && !player1Turn))
+              
+                if ((shooterName == "Player1" && !player1Turn) ||
+                    (shooterName == "Player2" && player1Turn))
                 {
-                    bool isHit = playerShipPositions[targetPlayerName].Contains(shotPosition);
-                    if (isHit)
-                    {
-                        playerShipPositions[targetPlayerName].Remove(shotPosition);
-                        Console.WriteLine($"Hit on {targetPlayerName} at {shotPosition}");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Miss on {targetPlayerName} at {shotPosition}");
-                    }
+                    SendErrorMessage(shooter, "INVALID_TURN");
+                    return;
+                }
 
-
-                    ForwardMessage(shooter, message);
-
-                   
-                    player1Turn = !player1Turn;
-                    SendTurnMessages();
+               
+                bool isHit = playerShipPositions[targetPlayerName].Contains(shotPosition);
+                if (isHit)
+                {
+                    playerShipPositions[targetPlayerName].Remove(shotPosition);
+                    Console.WriteLine($"Hit on {targetPlayerName} at {shotPosition}");
                 }
                 else
                 {
-                    Console.WriteLine($"Invalid turn for {shooterName}. Ignoring shot.");
+                    Console.WriteLine($"Miss on {targetPlayerName} at {shotPosition}");
+                    player1Turn = !player1Turn;
                 }
+
+                ForwardMessage(shooter, message);
+                SendTurnMessages();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error processing shot: {ex.Message}");
+                SendErrorMessage(shooter, "UNEXPECTED_ERROR");
+            }
+        }
+
+     
+        static void SendErrorMessage(TcpClient shooter, string errorCode)
+        {
+            try
+            {
+                byte[] errorMessage = Encoding.UTF8.GetBytes($"ERROR:{errorCode}");
+                if (shooter == player1)
+                    stream1.Write(errorMessage, 0, errorMessage.Length);
+                else
+                    stream2.Write(errorMessage, 0, errorMessage.Length);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error sending error message: {ex.Message}");
             }
         }
         static void SendTurnMessages()
