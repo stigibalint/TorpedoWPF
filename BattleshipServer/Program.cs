@@ -40,6 +40,8 @@ namespace BattleshipServer
             player2Thread.Start();
         }
 
+        static bool gameStarted = false; 
+
         static void HandlePlayer(TcpClient player, NetworkStream stream, string playerName)
         {
             byte[] buffer = new byte[1024];
@@ -63,12 +65,14 @@ namespace BattleshipServer
                         Console.WriteLine($"[{playerName}] Ship Positions: {positions}");
                         Console.WriteLine($"Total Players with Positions: {playerShipPositions.Count}");
 
-                        if (playerShipPositions.Count == 2)
+       
+                        if (playerShipPositions.Count == 2 && !gameStarted)
                         {
                             Console.WriteLine("BOTH PLAYERS HAVE POSITIONS. STARTING GAME!");
                             Broadcast("ALL_READY");
                             player1Turn = true;
                             SendTurnMessages();
+                            gameStarted = true; 
                         }
                     }
 
