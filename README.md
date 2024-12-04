@@ -87,9 +87,8 @@ A játék két részből áll: a kliensből és a szerverből.
    - Klónozd le a repozitóriumot a következő parancs segítségével:
 
      ```bash
-     git clone https://github.com/your-repository/battleship.git
+     git clone https://github.com/stigibalint/TorpedoWPF.git
      ```
-
 2. **A megoldás megnyitása**:
    - Nyisd meg a `Battleship.sln` fájlt a **Visual Studio**-ban.
 
