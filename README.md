@@ -13,7 +13,6 @@ Ez a projekt egy klasszikus **Battleship** (tengerészeti csata) játék kliens-
 7. [Telepítés és Használat](#telepítés-és-használat)
 8. [Játék Leírás](#játék-leírás)
 9. [Fejlesztés és Bővítés](#fejlesztés-és-bővítés)
-10. [Licenc](#licenc)
 
 ---
 
@@ -129,12 +128,6 @@ A játék két részből áll: a kliensből és a szerverből.
 ## Fejlesztés és Bővítés
 
 Bármely fejlesztő szabadon módosíthatja a kódot, hozzáadhat új funkciókat, vagy javíthatja a meglévőket. A projekthez pull request-eket lehet benyújtani a GitHub repozitóriumban.
-
----
-
-## Licenc
-
-A projekt az **MIT Licenc** alatt érhető el. A licenc részleteit a [LICENSE](LICENSE) fájlban találhatók.
 
 ---
 
