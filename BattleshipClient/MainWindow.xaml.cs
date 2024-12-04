@@ -272,7 +272,35 @@ namespace BattleshipClient
         private void HandleServerMessage(string message)
         {
             Console.WriteLine($"Received server message: {message}");
-
+            if (message.StartsWith("ERROR:"))
+            {
+                string errorCode = message.Substring(6);
+                Dispatcher.Invoke(() =>
+                {
+                    switch (errorCode)
+                    {
+                        case "INVALID_SHOT_FORMAT":
+                            MessageBox.Show("Hibás lövés formátum!");
+                            break;
+                        case "INVALID_COORDINATES":
+                            MessageBox.Show("Érvénytelen koordináták!");
+                            break;
+                        case "OUT_OF_BOARD":
+                            MessageBox.Show("A lövés a pályán kívülre esik!");
+                            break;
+                        case "INVALID_TURN":
+                            MessageBox.Show("Nem te következel!");
+                            break;
+                        case "UNEXPECTED_ERROR":
+                            MessageBox.Show("Váratlan hiba történt!");
+                            break;
+                        default:
+                            MessageBox.Show("Ismeretlen hiba!");
+                            break;
+                    }
+                });
+                return;
+            }
             if (message == "ALL_READY")
             {
                 if (!AllShipsPlaced())
@@ -336,7 +364,19 @@ namespace BattleshipClient
                 });
                 ResetGame();
             }
+            if (message == "INVALID_TURN")
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    MessageBox.Show("Nem te következel!");
+                 
+                    shotCoordinates.Remove(shotCoordinates.Last());
+                });
+                return;
+            }
         }
+
+        private HashSet<string> shotCoordinates = new HashSet<string>();
 
         private void EnemyBoard_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -348,6 +388,15 @@ namespace BattleshipClient
             int col = (int)(clickPosition.X / (board.ActualWidth / 10));
             int row = (int)(clickPosition.Y / (board.ActualHeight / 10));
 
+           
+            string coordinate = $"{row},{col}";
+            if (shotCoordinates.Contains(coordinate))
+            {
+                MessageBox.Show("Erre a koordinátára már lőttél!");
+                return;
+            }
+
+            shotCoordinates.Add(coordinate);
             SendShot(row, col);
         }
 
@@ -422,6 +471,7 @@ namespace BattleshipClient
                 }
             }
         }
+
 
         private void SendGameOverMessage(bool won)
         {
