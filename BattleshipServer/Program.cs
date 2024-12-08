@@ -145,7 +145,7 @@ namespace BattleshipServer
                 string targetPlayerName = (shooter == player1) ? "Player2" : "Player1";
                 string shotPosition = $"{row},{col}";
 
-       
+                // Check shot history
                 if (shotHistory.Contains(shotPosition))
                 {
                     SendErrorMessage(shooter, "ALREADY_SHOT");
@@ -153,6 +153,7 @@ namespace BattleshipServer
                 }
                 shotHistory.Add(shotPosition);
 
+                // Turn validation
                 if ((shooterName == "Player1" && !player1Turn) ||
                     (shooterName == "Player2" && player1Turn))
                 {
@@ -170,12 +171,11 @@ namespace BattleshipServer
                     player1Turn = !player1Turn;
                 }
 
+                // Check for game over
                 if (!playerShipPositions[targetPlayerName].Any())
                 {
-        
                     string winnerName = (targetPlayerName == "Player1") ? "Player2" : "Player1";
 
-              
                     if (winnerName == "Player1")
                     {
                         SendGameOverMessage(player1, "GAME_OVER_WIN");
