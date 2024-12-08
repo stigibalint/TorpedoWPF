@@ -240,7 +240,7 @@ namespace BattleshipClient
             }
         }
         private bool readyForRetry = false;
-
+        private int readyPlayersForRetry = 0;
         private void RetryButton_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -249,6 +249,9 @@ namespace BattleshipClient
                 byte[] data = Encoding.UTF8.GetBytes(message);
                 stream.Write(data, 0, data.Length);
                 RetryButton.IsEnabled = false;
+
+       
+                RetryButton.Content = $"🔁 Start New Game (1/2)";
             }
             catch (Exception ex)
             {
@@ -319,11 +322,7 @@ namespace BattleshipClient
                         case "UNEXPECTED_ERROR":
                             MessageBox.Show("Váratlan hiba történt!");
                             break;
-                        case "ALREADY_SHOT":
-                            MessageBox.Show("Erre a koordinátára már lőttél!");
-                           
-                            isMyTurn = true;
-                            break;
+                      
                         default:
                             MessageBox.Show("Ismeretlen hiba!");
                             break;
@@ -398,9 +397,25 @@ namespace BattleshipClient
             }
             else if (message == "GAME_RETRY")
             {
+                readyPlayersForRetry = 0;
+                RetryButton.Content = $"🔁 Start New Game (0/2)";
                 ResetGameState();
             }
-            if (message == "INVALID_TURN")
+            else if (message == "PLAYER_RETRY_COUNT")
+            {
+                string[] parts = message.Split(':');
+                if (parts.Length > 1 && int.TryParse(parts[1], out int count))
+                {
+                    readyPlayersForRetry = count;
+                    RetryButton.Content = $"🔁 Start New Game ({readyPlayersForRetry}/2)";
+
+                    if (readyPlayersForRetry == 2)
+                    {
+                        RetryButton.Content = "🔁 New Game Ready!";
+                    }
+                }
+            }
+                if (message == "INVALID_TURN")
             {
                 Dispatcher.Invoke(() =>
                 {

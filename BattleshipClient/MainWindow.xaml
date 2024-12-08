@@ -60,6 +60,7 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
@@ -181,18 +182,17 @@
                            ToolTip="Destroyer 🧭 (2 cells)"/>
             </StackPanel>
 
-
             <Button Name="RetryButton" 
-                Content="🔁 Start New Game (0/2)" 
-                Grid.Row="3" 
-                Grid.ColumnSpan="2" 
-                Click="RetryButton_Click" 
-                Margin="20" 
-                Visibility="Hidden"
-                HorizontalAlignment="Center"
-                VerticalAlignment="Bottom"
-                Width="220"
-                Style="{StaticResource NauticalButton}"/>
+            Content="🔁 Start New Game (0/2)" 
+            Grid.Row="4"  
+             Grid.ColumnSpan="2" 
+            Click="RetryButton_Click" 
+            Margin="20" 
+            Visibility="Visible"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Bottom"
+            Width="220"
+            Style="{StaticResource NauticalButton}"/>
         </Grid>
     </Border>
 </Window>
