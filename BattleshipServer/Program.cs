@@ -40,7 +40,7 @@ namespace BattleshipServer
             player2Thread.Start();
         }
 
-        static bool gameStarted = false; 
+        static bool gameStarted = false;
 
         static void HandlePlayer(TcpClient player, NetworkStream stream, string playerName)
         {
@@ -65,17 +65,15 @@ namespace BattleshipServer
                         Console.WriteLine($"[{playerName}] Ship Positions: {positions}");
                         Console.WriteLine($"Total Players with Positions: {playerShipPositions.Count}");
 
-       
                         if (playerShipPositions.Count == 2 && !gameStarted)
                         {
                             Console.WriteLine("BOTH PLAYERS HAVE POSITIONS. STARTING GAME!");
                             Broadcast("ALL_READY");
                             player1Turn = true;
                             SendTurnMessages();
-                            gameStarted = true; 
+                            gameStarted = true;
                         }
                     }
-
                     else if (message.StartsWith("SHOT:"))
                     {
                         HandleShot(player, message);
@@ -88,18 +86,22 @@ namespace BattleshipServer
                     {
                         ForwardMessage(player, message);
                     }
-                    if (message == "RETRY_REQUEST")
+                    else if (message == "RETRY_REQUEST")
                     {
-                        retryCount++;
-                        if (retryCount == 2)
-                        {
-                      
-                            Broadcast("GAME_RETRY");
-                            retryCount = 0;
+                        int playerIndex = (playerName == "Player1") ? 0 : 1;
+                        playerRetryReady[playerIndex] = true;
 
-                            
+                        if (playerRetryReady[0] && playerRetryReady[1])
+                        {
+                            Broadcast("GAME_RETRY");
+
+                            // Játékállapot alaphelyzetbe
                             playerShipPositions.Clear();
                             player1Turn = false;
+                            gameStarted = false;
+                            playerRetryReady[0] = false;
+                            playerRetryReady[1] = false;
+                            shotHistory.Clear(); // Lövéstörténet törlése
                         }
                     }
                 }
@@ -111,20 +113,21 @@ namespace BattleshipServer
             }
         }
 
+        static HashSet<string> shotHistory = new HashSet<string>(); // Új statikus mező a kezdő részhez
+        static bool[] playerRetryReady = new bool[2]; // Új statikus mező a kezdő részhez
+
         static void HandleShot(TcpClient shooter, string message)
         {
             try
             {
                 string[] parts = message.Substring(5).Split(',');
 
-               
                 if (parts.Length < 2)
                 {
                     SendErrorMessage(shooter, "INVALID_SHOT_FORMAT");
                     return;
                 }
 
-              
                 if (!int.TryParse(parts[0], out int row) ||
                     !int.TryParse(parts[1], out int col))
                 {
@@ -142,10 +145,14 @@ namespace BattleshipServer
                 string targetPlayerName = (shooter == player1) ? "Player2" : "Player1";
                 string shotPosition = $"{row},{col}";
 
-                Console.WriteLine($"Shot received from {shooterName} at position {shotPosition}");
-                Console.WriteLine($"Current turn: {(player1Turn ? "Player1" : "Player2")}");
+                // Ismételt lövés ellenőrzése
+                if (shotHistory.Contains(shotPosition))
+                {
+                    SendErrorMessage(shooter, "ALREADY_SHOT");
+                    return;
+                }
+                shotHistory.Add(shotPosition);
 
-              
                 if ((shooterName == "Player1" && !player1Turn) ||
                     (shooterName == "Player2" && player1Turn))
                 {
@@ -153,21 +160,43 @@ namespace BattleshipServer
                     return;
                 }
 
-               
                 bool isHit = playerShipPositions[targetPlayerName].Contains(shotPosition);
                 if (isHit)
                 {
                     playerShipPositions[targetPlayerName].Remove(shotPosition);
-                    Console.WriteLine($"Hit on {targetPlayerName} at {shotPosition}");
                 }
                 else
                 {
-                    Console.WriteLine($"Miss on {targetPlayerName} at {shotPosition}");
                     player1Turn = !player1Turn;
                 }
 
-                ForwardMessage(shooter, message);
-                SendTurnMessages();
+                // Ellenőrizzük, hogy veszített-e valaki
+                if (!playerShipPositions[targetPlayerName].Any())
+                {
+                    // Ha a TARGET játékos elvesztette az összes hajóját
+                    string winnerName = (targetPlayerName == "Player1") ? "Player2" : "Player1";
+
+                    // Külön üzenet a nyertesnek és a vesztesnek
+                    if (winnerName == "Player1")
+                    {
+                        SendGameOverMessage(player1, "GAME_OVER_WIN");
+                        SendGameOverMessage(player2, "GAME_OVER_LOSE");
+                    }
+                    else
+                    {
+                        SendGameOverMessage(player1, "GAME_OVER_LOSE");
+                        SendGameOverMessage(player2, "GAME_OVER_WIN");
+                    }
+
+                    gameStarted = false;
+                    shotHistory.Clear();
+                    playerShipPositions.Clear();
+                }
+                else
+                {
+                    ForwardMessage(shooter, message);
+                    SendTurnMessages();
+                }
             }
             catch (Exception ex)
             {
@@ -175,8 +204,19 @@ namespace BattleshipServer
                 SendErrorMessage(shooter, "UNEXPECTED_ERROR");
             }
         }
-
-     
+        static void SendGameOverMessage(TcpClient player, string message)
+        {
+            try
+            {
+                byte[] data = Encoding.UTF8.GetBytes(message);
+                NetworkStream stream = player == player1 ? stream1 : stream2;
+                stream.Write(data, 0, data.Length);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Hiba a játék vége üzenet küldésekor: {ex.Message}");
+            }
+        }
         static void SendErrorMessage(TcpClient shooter, string errorCode)
         {
             try
