@@ -95,13 +95,13 @@ namespace BattleshipServer
                         {
                             Broadcast("GAME_RETRY");
 
-                            // Játékállapot alaphelyzetbe
+                       
                             playerShipPositions.Clear();
                             player1Turn = false;
                             gameStarted = false;
                             playerRetryReady[0] = false;
                             playerRetryReady[1] = false;
-                            shotHistory.Clear(); // Lövéstörténet törlése
+                            shotHistory.Clear(); 
                         }
                     }
                 }
@@ -113,8 +113,8 @@ namespace BattleshipServer
             }
         }
 
-        static HashSet<string> shotHistory = new HashSet<string>(); // Új statikus mező a kezdő részhez
-        static bool[] playerRetryReady = new bool[2]; // Új statikus mező a kezdő részhez
+        static HashSet<string> shotHistory = new HashSet<string>(); 
+        static bool[] playerRetryReady = new bool[2];
 
         static void HandleShot(TcpClient shooter, string message)
         {
@@ -145,7 +145,7 @@ namespace BattleshipServer
                 string targetPlayerName = (shooter == player1) ? "Player2" : "Player1";
                 string shotPosition = $"{row},{col}";
 
-                // Ismételt lövés ellenőrzése
+       
                 if (shotHistory.Contains(shotPosition))
                 {
                     SendErrorMessage(shooter, "ALREADY_SHOT");
@@ -170,13 +170,12 @@ namespace BattleshipServer
                     player1Turn = !player1Turn;
                 }
 
-                // Ellenőrizzük, hogy veszített-e valaki
                 if (!playerShipPositions[targetPlayerName].Any())
                 {
-                    // Ha a TARGET játékos elvesztette az összes hajóját
+        
                     string winnerName = (targetPlayerName == "Player1") ? "Player2" : "Player1";
 
-                    // Külön üzenet a nyertesnek és a vesztesnek
+              
                     if (winnerName == "Player1")
                     {
                         SendGameOverMessage(player1, "GAME_OVER_WIN");
