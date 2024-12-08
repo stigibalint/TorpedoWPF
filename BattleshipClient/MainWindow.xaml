@@ -5,8 +5,24 @@
         Height="850" 
         Width="1200"
         Background="#0A2342"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        AllowsTransparency="True">
     <Window.Resources>
+        <Style x:Key="WindowControlButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="40"/>
+            <Setter Property="Height" Value="30"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#15607A"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="NauticalButton" TargetType="Button">
             <Setter Property="Background" Value="#15607A"/>
             <Setter Property="Foreground" Value="White"/>
@@ -32,115 +48,151 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <!-- Turn Indicator -->
-        <Border Grid.Row="0" 
-                Grid.ColumnSpan="2" 
-                Background="#15607A" 
-                Padding="20">
-            <TextBlock Name="TurnIndicator" 
-                       Text="⚓ Place Your Ships" 
-                       HorizontalAlignment="Center" 
-                       FontSize="24" 
-                       Foreground="White" 
-                       FontWeight="SemiBold"/>
-        </Border>
 
-        <!-- Game Boards -->
-        <Border Grid.Row="1" 
-                Grid.Column="0" 
-                Background="#247BA0" 
-                Margin="20" 
-                CornerRadius="15">
-            <UniformGrid Name="PlayerBoard" 
-                         Rows="10" 
-                         Columns="10" 
-                         Margin="10" 
-                         Drop="PlayerBoard_Drop" 
-                         AllowDrop="True" 
-                         Background="#3B97D3"/>
-        </Border>
+    <Border BorderBrush="#15607A" 
+            BorderThickness="5" 
+            Background="#0A2342" 
+          >
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="1" 
-                Grid.Column="1" 
-                Background="#247BA0" 
-                Margin="20" 
-                CornerRadius="15">
-            <UniformGrid Name="EnemyBoard" 
-                         Rows="10" 
-                         Columns="10" 
-                         Margin="10" 
-                         Background="#3B97D3" 
-                         MouseLeftButtonDown="EnemyBoard_MouseLeftButtonDown"/>
-        </Border>
 
-        <!-- Ship Selection -->
-        <StackPanel Orientation="Horizontal" 
-                    Grid.Row="2" 
+            <Grid Grid.Row="0" Grid.ColumnSpan="2" Background="#15607A" MouseLeftButtonDown="Window_MouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="🚢 Battleship" 
+                           Foreground="White" 
+                           FontSize="16" 
+                           VerticalAlignment="Center" 
+                           Margin="10,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="🗗" 
+                            Name="MinimizeButton" 
+                            Click="MinimizeButton_Click" 
+                            Style="{StaticResource WindowControlButton}"/>
+                    <Button Content="🗖" 
+                            Name="MaximizeButton" 
+                            Click="MaximizeButton_Click" 
+                            Style="{StaticResource WindowControlButton}"/>
+                    <Button Content="✖" 
+                            Name="CloseButton" 
+                            Click="CloseButton_Click" 
+                            Style="{StaticResource WindowControlButton}"/>
+                </StackPanel>
+            </Grid>
+
+
+            <Border Grid.Row="1" 
+                    Grid.Column="0" 
+                    Background="#247BA0" 
+                    Margin="20" 
+                    CornerRadius="15">
+                <UniformGrid Name="PlayerBoard" 
+                             Rows="10" 
+                             Columns="10" 
+                             Margin="10" 
+                             Drop="PlayerBoard_Drop" 
+                             AllowDrop="True" 
+                             Background="#3B97D3"/>
+            </Border>
+
+            <Border Grid.Row="1" 
+                    Grid.Column="1" 
+                    Background="#247BA0" 
+                    Margin="20" 
+                    CornerRadius="15">
+                <UniformGrid Name="EnemyBoard" 
+                             Rows="10" 
+                             Columns="10" 
+                             Margin="10" 
+                             Background="#3B97D3" 
+                             MouseLeftButtonDown="EnemyBoard_MouseLeftButtonDown"/>
+            </Border>
+
+            <Border Grid.Row="2" 
                     Grid.ColumnSpan="2" 
-                    HorizontalAlignment="Center" 
-                    Margin="20">
-            <Rectangle Name="Carrier" 
-                       Fill="#5D6D7E" 
-                       Width="250" 
-                       Height="50" 
-                       MouseMove="Ship_MouseMove" 
-                       Margin="10" 
-                       Tag="5" 
-                       ToolTip="Carrier 🚢 (5 cells)"/>
-            <Rectangle Name="Battleship" 
-                       Fill="#5D6D7E" 
-                       Width="200" 
-                       Height="50" 
-                       MouseMove="Ship_MouseMove" 
-                       Margin="10" 
-                       Tag="4" 
-                       ToolTip="Battleship 🛥️ (4 cells)"/>
-            <Rectangle Name="Cruiser" 
-                       Fill="#5D6D7E" 
-                       Width="150" 
-                       Height="50" 
-                       MouseMove="Ship_MouseMove" 
-                       Margin="10" 
-                       Tag="3" 
-                       ToolTip="Cruiser ⚓ (3 cells)"/>
-            <Rectangle Name="Submarine" 
-                       Fill="#5D6D7E" 
-                       Width="150" 
-                       Height="50" 
-                       MouseMove="Ship_MouseMove" 
-                       Margin="10" 
-                       Tag="3" 
-                       ToolTip="Submarine 🏴‍☠️ (3 cells)"/>
-            <Rectangle Name="Destroyer" 
-                       Fill="#5D6D7E" 
-                       Width="100" 
-                       Height="50" 
-                       MouseMove="Ship_MouseMove" 
-                       Margin="10" 
-                       Tag="2" 
-                       ToolTip="Destroyer 🧭 (2 cells)"/>
-        </StackPanel>
+                    Background="#15607A" 
+                    Padding="20">
+                <TextBlock Name="TurnIndicator" 
+                           Text="⚓ Place Your Ships" 
+                           HorizontalAlignment="Center" 
+                           FontSize="24" 
+                           Foreground="White" 
+                           FontWeight="SemiBold"/>
+            </Border>
 
-        <!-- Retry Button -->
-        <Button Name="RetryButton" 
-                Content="🔁 Start New Game" 
+            <StackPanel Name="ShipSelectionPanel"
+                        Orientation="Horizontal" 
+                        Grid.Row="3" 
+                        Grid.ColumnSpan="2" 
+                        HorizontalAlignment="Center" 
+                        Margin="20">
+                <Rectangle Name="Carrier" 
+                           Fill="#5D6D7E" 
+                           Width="250" 
+                           Height="50" 
+                           MouseMove="Ship_MouseMove" 
+                           Margin="10" 
+                           Tag="5" 
+                           ToolTip="Carrier 🚢 (5 cells)"/>
+                <Rectangle Name="Battleship" 
+                           Fill="#5D6D7E" 
+                           Width="200" 
+                           Height="50" 
+                           MouseMove="Ship_MouseMove" 
+                           Margin="10" 
+                           Tag="4" 
+                           ToolTip="Battleship 🛥️ (4 cells)"/>
+                <Rectangle Name="Cruiser" 
+                           Fill="#5D6D7E" 
+                           Width="150" 
+                           Height="50" 
+                           MouseMove="Ship_MouseMove" 
+                           Margin="10" 
+                           Tag="3" 
+                           ToolTip="Cruiser ⚓ (3 cells)"/>
+                <Rectangle Name="Submarine" 
+                           Fill="#5D6D7E" 
+                           Width="150" 
+                           Height="50" 
+                           MouseMove="Ship_MouseMove" 
+                           Margin="10" 
+                           Tag="3" 
+                           ToolTip="Submarine 🏴‍☠️ (3 cells)"/>
+                <Rectangle Name="Destroyer" 
+                           Fill="#5D6D7E" 
+                           Width="100" 
+                           Height="50" 
+                           MouseMove="Ship_MouseMove" 
+                           Margin="10" 
+                           Tag="2"
+                           ToolTip="Destroyer 🧭 (2 cells)"/>
+            </StackPanel>
+
+
+            <Button Name="RetryButton" 
+                Content="🔁 Start New Game (0/2)" 
                 Grid.Row="3" 
                 Grid.ColumnSpan="2" 
                 Click="RetryButton_Click" 
                 Margin="20" 
-                Visibility="Collapsed"
+                Visibility="Hidden"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Bottom"
+                Width="220"
                 Style="{StaticResource NauticalButton}"/>
-    </Grid>
+        </Grid>
+    </Border>
 </Window>

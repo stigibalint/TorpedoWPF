@@ -73,7 +73,27 @@ namespace BattleshipClient
                 DragDrop.DoDragDrop(ship, ship.Tag, DragDropEffects.Move);
             }
         }
+        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DragMove();
+        }
 
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState == WindowState.Maximized
+                ? WindowState.Normal
+                : WindowState.Maximized;
+        }
         private void PlayerBoard_Drop(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.StringFormat) && sender is UniformGrid board)
@@ -232,42 +252,47 @@ namespace BattleshipClient
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error sending retry request: {ex.Message}");
+                MessageBox.Show($"Hiba a retry kérés küldésekor: {ex.Message}");
             }
-        }private void ResetGameState()
-{
-    Dispatcher.Invoke(() => {
-
-        for (int i = 0; i < PlayerBoard.Children.Count; i++)
-        {
-            Rectangle cell = (Rectangle)PlayerBoard.Children[i];
-            cell.Fill = Brushes.Transparent;
         }
-
-        for (int i = 0; i < EnemyBoard.Children.Count; i++)
+        private void ResetGameState()
         {
-            Rectangle cell = (Rectangle)EnemyBoard.Children[i];
-            cell.Fill = Brushes.Transparent;
+            Dispatcher.Invoke(() => {
+                for (int i = 0; i < PlayerBoard.Children.Count; i++)
+                {
+                    Rectangle cell = (Rectangle)PlayerBoard.Children[i];
+                    cell.Fill = Brushes.Transparent;
+                }
+
+                for (int i = 0; i < EnemyBoard.Children.Count; i++)
+                {
+                    Rectangle cell = (Rectangle)EnemyBoard.Children[i];
+                    cell.Fill = Brushes.Transparent;
+                }
+
+                foreach (var ship in shipRectangles)
+                {
+                    ship.Visibility = Visibility.Visible;
+                }
+
+
+                playerGrid = new int[10, 10];
+                remainingPlayerShips = shipSizes.Sum();
+                remainingEnemyShips = shipSizes.Sum();
+                isMyTurn = false;
+                shipsPlaced = false;
+                shotCoordinates.Clear();
+
+                TurnIndicator.Text = "⚓ Place Your Ships";
+                TurnIndicator.Foreground = Brushes.White; 
+                EnemyBoard.IsEnabled = false;
+
+    
+                RetryButton.Visibility = Visibility.Visible;
+                RetryButton.IsEnabled = true;
+                RetryButton.Opacity = 0.8;
+            });
         }
-
-  
-        foreach (var ship in shipRectangles)
-        {
-            ship.Visibility = Visibility.Visible;
-        }
-
-        playerGrid = new int[10, 10];
-        remainingPlayerShips = shipSizes.Sum();
-        remainingEnemyShips = shipSizes.Sum();
-        isMyTurn = false;
-        shipsPlaced = false;
-
-        TurnIndicator.Text = "Place Your Ships";
-        TurnIndicator.Foreground = Brushes.Black;
-        EnemyBoard.IsEnabled = false;
-        RetryButton.Visibility = Visibility.Visible;
-    });
-}
 
         private void HandleServerMessage(string message)
         {
@@ -293,6 +318,11 @@ namespace BattleshipClient
                             break;
                         case "UNEXPECTED_ERROR":
                             MessageBox.Show("Váratlan hiba történt!");
+                            break;
+                        case "ALREADY_SHOT":
+                            MessageBox.Show("Erre a koordinátára már lőttél!");
+                           
+                            isMyTurn = true;
                             break;
                         default:
                             MessageBox.Show("Ismeretlen hiba!");
@@ -350,9 +380,10 @@ namespace BattleshipClient
                 {
                     TurnIndicator.Text = "You Win!";
                     TurnIndicator.Foreground = Brushes.Green;
+                    MessageBox.Show("Gratulálok! Ön győzött!");
                     EnemyBoard.IsEnabled = false;
+                    RetryButton.Visibility = Visibility.Visible;
                 });
-                ResetGame();
             }
             else if (message == "GAME_OVER_LOSE")
             {
@@ -360,9 +391,14 @@ namespace BattleshipClient
                 {
                     TurnIndicator.Text = "You Lose!";
                     TurnIndicator.Foreground = Brushes.Red;
+                    MessageBox.Show("Sajnos vesztett!");
                     EnemyBoard.IsEnabled = false;
+                    RetryButton.Visibility = Visibility.Visible;
                 });
-                ResetGame();
+            }
+            else if (message == "GAME_RETRY")
+            {
+                ResetGameState();
             }
             if (message == "INVALID_TURN")
             {
