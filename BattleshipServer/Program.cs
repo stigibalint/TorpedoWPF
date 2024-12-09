@@ -95,13 +95,13 @@ namespace BattleshipServer
                         {
                             Broadcast("GAME_RETRY");
 
-                       
                             playerShipPositions.Clear();
                             player1Turn = false;
                             gameStarted = false;
                             playerRetryReady[0] = false;
                             playerRetryReady[1] = false;
-                            shotHistory.Clear(); 
+                            playerShotHistory["Player1"].Clear();
+                            playerShotHistory["Player2"].Clear();
                         }
                     }
                 }
@@ -113,8 +113,14 @@ namespace BattleshipServer
             }
         }
 
-        static HashSet<string> shotHistory = new HashSet<string>(); 
+       
         static bool[] playerRetryReady = new bool[2];
+
+        static Dictionary<string, HashSet<string>> playerShotHistory = new Dictionary<string, HashSet<string>>
+{
+    { "Player1", new HashSet<string>() },
+    { "Player2", new HashSet<string>() }
+};
 
         static void HandleShot(TcpClient shooter, string message)
         {
@@ -145,13 +151,12 @@ namespace BattleshipServer
                 string targetPlayerName = (shooter == player1) ? "Player2" : "Player1";
                 string shotPosition = $"{row},{col}";
 
-                // Check shot history
-                if (shotHistory.Contains(shotPosition))
+                // Check shot history for this player
+                if (playerShotHistory[shooterName].Contains(shotPosition))
                 {
-                    SendErrorMessage(shooter, "ALREADY_SHOT");
+                    SendErrorMessage(shooter, "ALREADY_SHOT_BY_YOU");
                     return;
                 }
-                shotHistory.Add(shotPosition);
 
                 // Turn validation
                 if ((shooterName == "Player1" && !player1Turn) ||
@@ -160,6 +165,9 @@ namespace BattleshipServer
                     SendErrorMessage(shooter, "INVALID_TURN");
                     return;
                 }
+
+                // Add shot to player's shot history
+                playerShotHistory[shooterName].Add(shotPosition);
 
                 bool isHit = playerShipPositions[targetPlayerName].Contains(shotPosition);
                 if (isHit)
@@ -188,7 +196,8 @@ namespace BattleshipServer
                     }
 
                     gameStarted = false;
-                    shotHistory.Clear();
+                    playerShotHistory["Player1"].Clear();
+                    playerShotHistory["Player2"].Clear();
                     playerShipPositions.Clear();
                 }
                 else
