@@ -436,10 +436,21 @@ namespace BattleshipClient
             UniformGrid board = (UniformGrid)sender;
             Point clickPosition = e.GetPosition(board);
 
+         
+            if (clickPosition.X < 0 || clickPosition.X >= board.ActualWidth ||
+                clickPosition.Y < 0 || clickPosition.Y >= board.ActualHeight)
+            {
+                return; 
+            }
+
             int col = (int)(clickPosition.X / (board.ActualWidth / 10));
             int row = (int)(clickPosition.Y / (board.ActualHeight / 10));
 
-           
+            if (row < 0 || row >= 10 || col < 0 || col >= 10)
+            {
+                return;
+            }
+
             string coordinate = $"{row},{col}";
             if (shotCoordinates.Contains(coordinate))
             {
@@ -450,7 +461,6 @@ namespace BattleshipClient
             shotCoordinates.Add(coordinate);
             SendShot(row, col);
         }
-
         private void SendShot(int row, int col)
         {
             try
