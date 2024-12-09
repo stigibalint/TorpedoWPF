@@ -251,7 +251,7 @@ namespace BattleshipClient
                 RetryButton.IsEnabled = false;
 
        
-                RetryButton.Content = $"🔁 Start New Game (1/2)";
+                RetryButton.Content = $"🔁 Waiting for other player";
             }
             catch (Exception ex)
             {

@@ -183,7 +183,7 @@
             </StackPanel>
 
             <Button Name="RetryButton" 
-            Content="🔁 Start New Game (0/2)" 
+            Content="🔁 Start New Game" 
             Grid.Row="4"  
              Grid.ColumnSpan="2" 
             Click="RetryButton_Click" 
@@ -191,7 +191,7 @@
             Visibility="Visible"
             HorizontalAlignment="Center"
             VerticalAlignment="Bottom"
-            Width="220"
+            Width="230"
             Style="{StaticResource NauticalButton}"/>
         </Grid>
     </Border>
